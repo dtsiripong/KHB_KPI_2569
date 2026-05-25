@@ -662,8 +662,12 @@
 
       <section id="providersView" class="hidden">
         <div class="panel">
-          <h3>เปรียบเทียบหน่วยบริการตาม KPI ที่เลือก</h3>
-          <p class="muted small" style="margin-top: 4px;">ใช้ control เดียวกับหน้า KPI เพื่อเลือกข้อ กรอง และเรียงข้อมูล</p>
+          <h3>ผลงานรายหน่วยบริการ: ดู KPI ครบทุกข้อ</h3>
+          <p class="muted small" style="margin-top: 4px;">เลือกหน่วยบริการเพื่อดูเป้าหมาย ผลงาน ร้อยละ และสถานะของ KPI 1-7 ในหน้าเดียว</p>
+          <div class="controls" style="grid-template-columns: minmax(260px, 420px) 1fr; margin-top: 12px;">
+            <select id="providerSelect" aria-label="เลือกหน่วยบริการ"></select>
+            <p class="muted small" id="providerSummary"></p>
+          </div>
           <div id="providerMatrix" style="margin-top: 14px;"></div>
         </div>
       </section>
@@ -694,6 +698,7 @@
       sortDir: "desc",
       search: "",
       failOnly: false,
+      providerCode: "",
     };
 
     const $ = (sel) => document.querySelector(sel);
@@ -740,6 +745,19 @@
         return ((a[state.sort] || 0) - (b[state.sort] || 0)) * dir;
       });
       return rows;
+    }
+
+    function allProviders() {
+      const map = new Map();
+      Object.values(DATA.providers).flat().forEach((row) => {
+        if (!map.has(row.code)) map.set(row.code, { code: row.code, name: row.name });
+      });
+      return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "th"));
+    }
+
+    function selectedProviderCode() {
+      if (state.providerCode) return state.providerCode;
+      return allProviders()[0]?.code || "";
     }
 
     function renderCards() {
@@ -836,28 +854,92 @@
     }
 
     function renderProviderMatrix() {
-      const kpi = getKpi();
-      const rows = getProviders();
-      const maxRate = Math.max(100, kpi.criterion, ...rows.map((r) => r.rate)) * 1.08;
+      const providerCode = selectedProviderCode();
+      const provider = allProviders().find((p) => p.code === providerCode);
+      const rows = DATA.summary.map((kpi) => {
+        const row = (DATA.providers[String(kpi.no)] || []).find((item) => item.code === providerCode) || {};
+        return {
+          ...row,
+          kpiNo: kpi.no,
+          kpiTitle: kpiTitle(kpi),
+          criterion: kpi.criterion,
+          gap: Number(row.rate ?? 0) - Number(kpi.criterion ?? 0),
+        };
+      });
+      const passCount = rows.filter((row) => row.status === "ผ่าน").length;
+      const failCount = rows.length - passCount;
+      const totalTarget = rows.reduce((sum, row) => sum + (row.target || 0), 0);
+      const totalResult = rows.reduce((sum, row) => sum + (row.result || 0), 0);
+      const maxRate = Math.max(100, ...rows.map((r) => r.rate || 0), ...rows.map((r) => r.criterion || 0)) * 1.08;
+      $("#providerSummary").textContent = provider
+        ? provider.name + " | ผ่าน " + passCount + " KPI | ตกเกณฑ์ " + failCount + " KPI"
+        : "";
       $("#providerMatrix").innerHTML = `
         <div class="selected-kpi">
           <div>
-            <h2>KPI ${kpi.no}: ${escapeHtml(kpiTitle(kpi))}</h2>
-            <p class="muted small">กรองอยู่ ${rows.length} จาก ${DATA.provider_count} หน่วยบริการ | เส้นสีเข้มคือเกณฑ์ ${pct(kpi.criterion)}</p>
+            <h2>${escapeHtml(provider?.name || "ไม่พบหน่วยบริการ")}</h2>
+            <p class="muted small">แสดง KPI ทั้ง 7 ข้อของหน่วยบริการที่เลือก | เส้นสีเข้มในกราฟคือเกณฑ์ของแต่ละ KPI</p>
           </div>
-          <span class="badge ${passClass(kpi.status)}">${statusText(kpi.status)}</span>
+          <span class="badge ${failCount === 0 ? "pass" : "fail"}">ผ่าน ${passCount} / 7</span>
         </div>
-        <div class="provider-chart">
-          ${rows.map((r) => `
-            <div class="provider-row">
-              <div class="provider-name">${escapeHtml(r.name)}</div>
-              <div class="bar-track">
-                <div class="criterion-line" style="left:${Math.min(100, kpi.criterion / maxRate * 100)}%"></div>
-                <div class="bar-fill ${passClass(r.status)}" style="width:${Math.min(100, r.rate / maxRate * 100)}%"></div>
-              </div>
-              <span class="num">${pct(r.rate)}</span>
+        <div class="kpi-facts" style="margin-bottom: 14px;">
+          <div class="fact"><strong style="color:var(--green)">${passCount}</strong><span class="muted small">KPI ผ่านเกณฑ์</span></div>
+          <div class="fact"><strong style="color:var(--orange)">${failCount}</strong><span class="muted small">KPI ตกเกณฑ์</span></div>
+          <div class="fact"><strong style="color:var(--teal)">${fmt(totalTarget)}</strong><span class="muted small">รวมเป้าหมายทุก KPI</span></div>
+          <div class="fact"><strong style="color:var(--blue)">${fmt(totalResult)}</strong><span class="muted small">รวมผลงานทุก KPI</span></div>
+        </div>
+        <div class="dashboard-grid">
+          <div>
+            <h3>กราฟ KPI 1-7 ของหน่วยบริการ</h3>
+            <div class="provider-chart">
+              ${rows.map((r) => `
+                <div class="provider-row" style="grid-template-columns: 118px minmax(0, 1fr) 64px;">
+                  <div class="provider-name">KPI ${r.kpiNo}</div>
+                  <div class="bar-track" title="เกณฑ์ ${pct(r.criterion)}">
+                    <div class="criterion-line" style="left:${Math.min(100, r.criterion / maxRate * 100)}%"></div>
+                    <div class="bar-fill ${passClass(r.status)}" style="width:${Math.min(100, (r.rate || 0) / maxRate * 100)}%"></div>
+                  </div>
+                  <span class="num">${pct(r.rate)}</span>
+                </div>
+              `).join("")}
             </div>
-          `).join("")}
+          </div>
+          <div>
+            <h3>ตาราง KPI ของหน่วยบริการ</h3>
+            <div class="table-wrap" style="margin-top: 12px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ข้อ</th>
+                    <th>KPI</th>
+                    <th class="num">เกณฑ์</th>
+                    <th class="num">เป้าหมาย</th>
+                    <th class="num">ผลงาน</th>
+                    <th class="num">%</th>
+                    <th class="num">ส่วนต่าง</th>
+                    <th>สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows.map((r) => `
+                    <tr>
+                      <td>KPI ${r.kpiNo}</td>
+                      <td>${escapeHtml(r.kpiTitle)}</td>
+                      <td class="num">${pct(r.criterion)}</td>
+                      <td class="num">${fmt(r.target)}</td>
+                      <td class="num">${fmt(r.result)}</td>
+                      <td class="num">${pct(r.rate)}</td>
+                      <td class="num" style="color:${r.gap >= 0 ? "var(--green)" : "var(--orange)"};font-weight:800">${r.gap >= 0 ? "+" : ""}${pct(r.gap)}</td>
+                      <td><span class="badge ${passClass(r.status)}">${statusText(r.status)}</span></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="source-box">
+          <strong>หมายเหตุ:</strong> ข้อมูลหน่วยบริการใช้ชุดเดียวกับ dashboard ล่าสุด เฉพาะสังกัด สธ.; ตัด 02571 และ 11988; รหัส 14699 ใช้ชื่อ รพ.สต.หนองโบสถ์
         </div>
       `;
     }
@@ -898,6 +980,7 @@
 
     function syncControls() {
       $("#kpiSelect").value = String(state.kpiNo);
+      if ($("#providerSelect")) $("#providerSelect").value = selectedProviderCode();
       $("#searchInput").value = state.search;
       $("#failOnly").checked = state.failOnly;
       $$(".segmented button").forEach((b) => b.classList.toggle("active", b.dataset.sort === state.sort));
@@ -908,7 +991,7 @@
       const titles = {
         overview: ["ภาพรวม KPI ทันตกรรม อำเภอครบุรี", "ข้อมูลจาก HDC กระทรวงสาธารณสุข จังหวัดนครราชสีมา"],
         kpi: ["เจาะราย KPI และรายหน่วยบริการ", "เลือก KPI เพื่อดูตารางและกราฟหน่วยบริการ"],
-        providers: ["เปรียบเทียบรายหน่วยบริการ", "ใช้สำหรับดูอันดับผลงานและจุดต่ำกว่าเกณฑ์"],
+        providers: ["ผลงานรายหน่วยบริการ", "เลือก 1 หน่วยบริการเพื่อดู KPI ครบทุกข้อ"],
         gaps: ["จุดเร่งติดตาม", "KPI และหน่วยบริการที่ต่ำกว่าเกณฑ์"],
       };
       $("#pageTitle").textContent = titles[state.view][0];
@@ -934,8 +1017,12 @@
 
     function init() {
       $("#kpiSelect").innerHTML = DATA.summary.map((k) => `<option value="${k.no}">KPI ${k.no}: ${escapeHtml(kpiTitle(k))}</option>`).join("");
+      const providers = allProviders();
+      state.providerCode = providers[0]?.code || "";
+      $("#providerSelect").innerHTML = providers.map((p) => `<option value="${escapeHtml(p.code)}">${escapeHtml(p.name)} (${escapeHtml(p.code)})</option>`).join("");
       $$(".nav button").forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.view)));
       $("#kpiSelect").addEventListener("change", (e) => { state.kpiNo = Number(e.target.value); render(); });
+      $("#providerSelect").addEventListener("change", (e) => { state.providerCode = e.target.value; renderProviderMatrix(); syncControls(); });
       $("#searchInput").addEventListener("input", (e) => { state.search = e.target.value; renderKpi(); renderProviderMatrix(); });
       $("#failOnly").addEventListener("change", (e) => { state.failOnly = e.target.checked; renderKpi(); renderProviderMatrix(); });
       $$(".segmented button").forEach((btn) => btn.addEventListener("click", () => {
@@ -960,6 +1047,7 @@
         state.sortDir = "desc";
         state.search = "";
         state.failOnly = false;
+        state.providerCode = allProviders()[0]?.code || "";
         render();
       });
       render();
