@@ -1,0 +1,971 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>รายงาน KPI ทันตกรรม อำเภอครบุรี ปีงบประมาณ 2569 | Interactive dashboard</title>
+  <style>
+    :root {
+      --ink: #12312e;
+      --muted: #5e6b68;
+      --line: #d7e4e0;
+      --paper: #f7fbfa;
+      --panel: #ffffff;
+      --teal: #0f766e;
+      --mint: #14b8a6;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --orange: #f97316;
+      --red: #dc2626;
+      --soft-green: #e8f7ed;
+      --soft-orange: #fff1e8;
+      --shadow: 0 10px 28px rgba(15, 58, 53, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Tahoma, "Noto Sans Thai", system-ui, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+    }
+
+    aside {
+      background: #e4f5f1;
+      border-right: 1px solid var(--line);
+      padding: 24px 20px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+
+    main {
+      padding: 24px;
+      min-width: 0;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 27px;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 21px;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .small {
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .brand-rule {
+      width: 52px;
+      height: 5px;
+      background: var(--teal);
+      margin: 18px 0;
+    }
+
+    .scope {
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.62);
+      border-radius: 8px;
+      margin-top: 18px;
+      line-height: 1.55;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .nav button,
+    .segmented button,
+    .icon-button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      transition: 120ms ease;
+    }
+
+    .nav button {
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .nav button:hover,
+    .segmented button:hover,
+    .icon-button:hover {
+      border-color: var(--teal);
+    }
+
+    .nav button.active,
+    .segmented button.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: white;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .topbar-title {
+      min-width: 0;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .icon-button {
+      min-height: 36px;
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      min-height: 96px;
+      border-left: 5px solid var(--teal);
+    }
+
+    .metric.blue { border-left-color: var(--blue); }
+    .metric.green { border-left-color: var(--green); }
+    .metric.orange { border-left-color: var(--orange); }
+
+    .metric-value {
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 800;
+      color: var(--teal);
+      margin-bottom: 8px;
+    }
+
+    .metric.blue .metric-value { color: var(--blue); }
+    .metric.green .metric-value { color: var(--green); }
+    .metric.orange .metric-value { color: var(--orange); }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .kpi-cards {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .kpi-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: left;
+      min-height: 116px;
+      cursor: pointer;
+      position: relative;
+      transition: 120ms ease;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-1px);
+      border-color: var(--teal);
+    }
+
+    .kpi-card.active {
+      outline: 2px solid var(--teal);
+      outline-offset: 1px;
+    }
+
+    .kpi-no {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .kpi-rate {
+      font-size: 24px;
+      font-weight: 800;
+      margin-top: 8px;
+    }
+
+    .kpi-name {
+      font-size: 11px;
+      line-height: 1.35;
+      color: var(--muted);
+      margin-top: 5px;
+      min-height: 30px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .badge.pass {
+      color: #0f7a32;
+      background: var(--soft-green);
+    }
+
+    .badge.fail {
+      color: #c2410c;
+      background: var(--soft-orange);
+    }
+
+    .chart-list {
+      display: grid;
+      gap: 11px;
+      margin-top: 14px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr) 62px;
+      gap: 10px;
+      align-items: center;
+      min-height: 26px;
+    }
+
+    .bar-track {
+      height: 14px;
+      background: #edf3f1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--mint);
+      min-width: 2px;
+    }
+
+    .bar-fill.pass {
+      background: var(--mint);
+    }
+
+    .bar-fill.fail {
+      background: var(--orange);
+    }
+
+    .criterion-line {
+      position: absolute;
+      top: -4px;
+      bottom: -4px;
+      width: 2px;
+      background: var(--ink);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 210px minmax(220px, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    select, input[type="search"] {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: white;
+      color: var(--ink);
+      width: 100%;
+    }
+
+    label.check {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-auto-flow: column;
+      gap: 6px;
+    }
+
+    .segmented button {
+      min-height: 36px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .selected-kpi {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .kpi-facts {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .fact {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfdfc;
+    }
+
+    .fact strong {
+      display: block;
+      font-size: 20px;
+      line-height: 1.15;
+      margin-bottom: 5px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+    }
+
+    th {
+      background: var(--teal);
+      color: white;
+      font-size: 12px;
+      text-align: left;
+      padding: 9px 10px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      white-space: nowrap;
+    }
+
+    th button {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    td {
+      border-top: 1px solid var(--line);
+      padding: 8px 10px;
+      font-size: 12px;
+      vertical-align: middle;
+    }
+
+    tbody tr:nth-child(even) td {
+      background: #f7fbfa;
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .provider-chart {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .provider-row {
+      display: grid;
+      grid-template-columns: 156px minmax(0, 1fr) 64px;
+      gap: 10px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .provider-name {
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .source-box {
+      margin-top: 12px;
+      border-left: 4px solid var(--teal);
+      background: #f1f8f6;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .risk-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .risk-item {
+      display: grid;
+      grid-template-columns: 68px 1fr 80px;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 9px 10px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1120px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      aside {
+        position: static;
+        height: auto;
+      }
+      .nav {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .summary-grid, .kpi-facts {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .kpi-cards {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      main, aside {
+        padding: 16px;
+      }
+      .topbar, .selected-kpi {
+        display: grid;
+      }
+      .summary-grid, .kpi-facts, .controls {
+        grid-template-columns: 1fr;
+      }
+      .kpi-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .nav {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .provider-row {
+        grid-template-columns: 120px minmax(0, 1fr) 56px;
+      }
+    }
+
+    @media print {
+      aside, .actions, .controls, .nav {
+        display: none;
+      }
+      .app {
+        display: block;
+      }
+      main {
+        padding: 0;
+      }
+      .panel, .metric, .kpi-card {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <h1>Dental KPI<br>Dashboard</h1>
+      <p class="muted">รายงาน KPI ทันตกรรม อำเภอครบุรี ปีงบประมาณ 2569</p>
+      <div class="brand-rule"></div>
+      <p class="small muted">HDC ประมวลผลล่าสุด<br><strong>24 พฤษภาคม 2569</strong></p>
+      <div class="scope small">เฉพาะหน่วยบริการสังกัดกระทรวงสาธารณสุข | ตัด 02571 โนนกลาง และ 11988 บ้านหนองโบสถ์ | 14699 = รพ.สต.หนองโบสถ์</div>
+      <nav class="nav" aria-label="มุมมอง dashboard">
+        <button class="active" data-view="overview">ภาพรวม</button>
+        <button data-view="kpi">ราย KPI</button>
+        <button data-view="providers">หน่วยบริการ</button>
+        <button data-view="gaps">จุดเร่งติดตาม</button>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div class="topbar-title">
+          <h2 id="pageTitle">ภาพรวม KPI ทันตกรรม อำเภอครบุรี</h2>
+          <p class="muted small" id="pageSubtitle">ข้อมูลจาก HDC กระทรวงสาธารณสุข จังหวัดนครราชสีมา</p>
+        </div>
+        <div class="actions">
+          <button class="icon-button" id="printBtn" title="พิมพ์หรือบันทึกเป็น PDF">Print</button>
+          <button class="icon-button" id="resetBtn" title="กลับค่าเริ่มต้น">Reset</button>
+        </div>
+      </div>
+
+      <section class="summary-grid" aria-label="สรุปภาพรวม">
+        <div class="metric green"><div class="metric-value">5 / 7</div><div class="muted small">KPI ผ่านเกณฑ์</div></div>
+        <div class="metric orange"><div class="metric-value">2</div><div class="muted small">KPI ตกเกณฑ์</div></div>
+        <div class="metric blue"><div class="metric-value">17</div><div class="muted small">หน่วยบริการที่คำนวณ</div></div>
+        <div class="metric"><div class="metric-value" id="activeRate">77.01%</div><div class="muted small">ผลงาน KPI ที่เลือก</div></div>
+      </section>
+
+      <section id="overviewView">
+        <div class="kpi-cards" id="kpiCards"></div>
+        <div class="dashboard-grid">
+          <div class="panel">
+            <h3>ภาพรวมรายข้อ: ผลงาน (%) เทียบเกณฑ์</h3>
+            <div class="chart-list" id="overviewChart"></div>
+          </div>
+          <div class="panel">
+            <h3>ตารางภาพรวมอำเภอ</h3>
+            <div class="table-wrap" style="margin-top: 12px;">
+              <table>
+                <thead>
+                  <tr><th>ข้อ</th><th>KPI</th><th class="num">เกณฑ์</th><th class="num">เป้าหมาย</th><th class="num">ผลงาน</th><th class="num">%</th><th>สถานะ</th></tr>
+                </thead>
+                <tbody id="overviewTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="kpiView" class="hidden">
+        <div class="controls">
+          <select id="kpiSelect" aria-label="เลือก KPI"></select>
+          <input id="searchInput" type="search" placeholder="ค้นหาหน่วยบริการหรือรหัส" />
+          <label class="check"><input type="checkbox" id="failOnly" /> เฉพาะตกเกณฑ์</label>
+          <div class="segmented" role="group" aria-label="เรียงข้อมูล">
+            <button class="active" data-sort="rate">เรียงตาม %</button>
+            <button data-sort="name">ชื่อ</button>
+          </div>
+        </div>
+        <div class="selected-kpi">
+          <div>
+            <h2 id="selectedTitle"></h2>
+            <p class="muted small" id="selectedSubtitle"></p>
+          </div>
+          <span id="selectedBadge" class="badge"></span>
+        </div>
+        <div class="kpi-facts" id="kpiFacts"></div>
+        <div class="dashboard-grid" style="margin-top: 14px;">
+          <div class="panel">
+            <h3>ตารางรายหน่วยบริการ</h3>
+            <div class="table-wrap" style="margin-top: 12px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th><button data-table-sort="name">หน่วยบริการ</button></th>
+                    <th>รหัส</th>
+                    <th class="num"><button data-table-sort="target">เป้าหมาย</button></th>
+                    <th class="num"><button data-table-sort="result">ผลงาน</button></th>
+                    <th class="num"><button data-table-sort="rate">%</button></th>
+                    <th>สถานะ</th>
+                  </tr>
+                </thead>
+                <tbody id="providerTable"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>กราฟรายหน่วยบริการ</h3>
+            <div class="provider-chart" id="providerChart"></div>
+          </div>
+        </div>
+        <div class="source-box" id="sourceBox"></div>
+      </section>
+
+      <section id="providersView" class="hidden">
+        <div class="panel">
+          <h3>เปรียบเทียบหน่วยบริการตาม KPI ที่เลือก</h3>
+          <p class="muted small" style="margin-top: 4px;">ใช้ control เดียวกับหน้า KPI เพื่อเลือกข้อ กรอง และเรียงข้อมูล</p>
+          <div id="providerMatrix" style="margin-top: 14px;"></div>
+        </div>
+      </section>
+
+      <section id="gapsView" class="hidden">
+        <div class="dashboard-grid">
+          <div class="panel">
+            <h3>KPI ที่ต่ำกว่าเกณฑ์</h3>
+            <div class="risk-list" id="kpiRiskList"></div>
+          </div>
+          <div class="panel">
+            <h3>หน่วยบริการที่ต้องติดตามใน KPI ที่เลือก</h3>
+            <p class="muted small" id="gapHint" style="margin-top: 4px;"></p>
+            <div class="risk-list" id="providerRiskList"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const DATA = {"title":"รายงาน KPI ทันตกรรม อำเภอครบุรี ปีงบประมาณ 2569","subtitle":"ข้อมูลจาก HDC กระทรวงสาธารณสุข จังหวัดนครราชสีมา","date":"24 พฤษภาคม 2569","filters":"เฉพาะหน่วยบริการสังกัดกระทรวงสาธารณสุข | ตัด 02571 โนนกลาง และ 11988 บ้านหนองโบสถ์ | 14699 = รพ.สต.หนองโบสถ์","provider_count":17,"pass_count":5,"fail_count":2,"summary":[{"no":1,"name":"ร้อยละเด็ก 0-5 ปี ได้รับการตรวจคัดกรองสุขภาพช่องปากและเคลือบ/ทาฟลูออไรด์เฉพาะที่","criterion":60,"target":2645,"result":2037,"rate":77.01,"status":"ผ่าน","source":"Service Plan สาขาสุขภาพช่องปาก: ใช้รวมรายงาน fluoride เด็ก 0-2 ปี และ 3-5 ปี","report_codes":"74ae1671d67390c0bc0bd734bb8fa219: OHSP ร้อยละเด็ก 0-2 ปี เคลือบ/ทา ฟลูออไรด์เฉพาะที่ เฉพาะเขตรับผิดชอบ (คน)\n8ad1c0936b86f836295150428063820e: OHSP ร้อยละเด็ก 3-5 ปี เคลือบ/ทา ฟลูออไรด์เฉพาะที่ เฉพาะเขตรับผิดชอบ (คน)","date":"24 พฤษภาคม 2569"},{"no":2,"name":"ร้อยละเด็ก 3 ปี ได้รับการตรวจคัดกรองสุขภาพช่องปาก","criterion":50,"target":449,"result":305,"rate":67.93,"status":"ผ่าน","source":"Service Plan สาขาสุขภาพช่องปาก: ใช้รายงานเด็กกลุ่มอายุ 3 ปี; คำนวณผลงานตรวจคัดกรองจาก target/total ของ HDC","report_codes":"e9f3192f523c79cbbbcf7b405e879384: OHSP ร้อยละเด็กกลุ่มอายุ 3 ปีมีฟันผุในฟันน้ำนม (ใช้ target/total)","date":"24 พฤษภาคม 2569"},{"no":3,"name":"ร้อยละเด็ก 6-12 ปี ได้รับการเคลือบหลุมร่องฟันกรามถาวร","criterion":40,"target":4837,"result":2265,"rate":46.83,"status":"ผ่าน","source":"ประชากรจาก Service Plan 17.11; ผลงานจากรายงานบริการทันตกรรม การเคลือบหลุมร่องฟันแท้ในเด็ก 6-12 ปี (คน); เฉพาะหน่วยบริการสังกัดกระทรวงสาธารณสุข","report_codes":"8b6e9aa2219613b9b6443a7724b7fd04: OHSP ร้อยละเด็กอายุ 6-12 ปี ได้รับการเคลือบหลุมร่องฟันกรามแท้ เฉพาะเขตรับผิดชอบ (คน)\nb2718517f902c423912505c2e0fe1d4f: การเคลือบหลุมร่องฟันแท้ในเด็กอายุ 6 -12 ปี (คน)","date":"24 พฤษภาคม 2569"},{"no":4,"name":"ร้อยละเด็ก 6-12 ปี ได้รับบริการทันตกรรม","criterion":60,"target":4837,"result":5444,"rate":112.55,"status":"ผ่าน","source":"ประชากรจาก Service Plan 17.13; ผลงานจากรายงานบริการทันตกรรม กลุ่มเด็ก 6-12 ปี ได้รับบริการทันตกรรม (คน); เฉพาะหน่วยบริการสังกัดกระทรวงสาธารณสุข","report_codes":"34f8384163b3a218f0300448482d9b6e: OHSP ร้อยละเด็ก 6-12 ปี ได้รับบริการทันตกรรม (คน)\n79711464fb275ca129b6b20b337b79a6: กลุ่มเด็ก 6-12 ปี ได้รับบริการทันตกรรม (คน)","date":"24 พฤษภาคม 2569"},{"no":5,"name":"อัตราการเข้าถึงบริการทันตกรรมของวัยทำงาน อายุ 15-59 ปี","criterion":30,"target":35985,"result":6675,"rate":18.55,"status":"ตกเกณฑ์","source":"เป้าหมายจาก Service Plan 17.20 ประชากรอายุ 15-59 ปีทั้งหมด; ผลงานจากรายงานการเข้าถึงบริการทันตกรรมข้อ 5 ทุกสิทธิ์","report_codes":"b8c600c3da072c24b375b07c56fa43cf: OHSP ร้อยละผู้มีอายุ 15-59 ปี ได้รับบริการทันตกรรม (คน)\n3d89d7b2e236d60d2e02ad969db4f6ea: รายงานผู้ป่วยนอกที่รับบริการทางทันตกรรม ในผู้มีอายุ 15-59 ปี แยกรายสิทธิ","date":"24 พฤษภาคม 2569"},{"no":6,"name":"อัตราประชาชนอายุ 40 ปีขึ้นไปที่มารับบริการได้รับการตรวจสุขภาพช่องปากและคัดกรองรอยโรคในช่องปาก","criterion":40,"target":9547,"result":5485,"rate":57.45,"status":"ผ่าน","source":"Service Plan สาขาสุขภาพช่องปาก: ใช้รวมรายงาน PMDs กลุ่มก่อนวัยสูงอายุ และผู้สูงอายุ","report_codes":"af2408900a6a2ed369b940680438785d: OHSP ร้อยละของกลุ่มก่อนวัยผู้สูงอายุที่ได้รับการคัดกรอง PMDs (คน)\n9f51a01dc95a8e3dc8e76d64c9209b7b: OHSP ร้อยละของกลุ่มผู้สูงอายุที่ได้รับการคัดกรอง PMDs (คน)","date":"24 พฤษภาคม 2569"},{"no":7,"name":"ร้อยละ 35 ของผู้สูงอายุได้รับการส่งเสริมป้องกันสุขภาพช่องปาก","criterion":35,"target":17483,"result":5294,"rate":30.28,"status":"ตกเกณฑ์","source":"Service Plan สาขาสุขภาพช่องปาก: P&P ในกลุ่มผู้สูงอายุ","report_codes":"0282aaa7ea31ae081a80990adbd8ca1e: OHSP อัตรา (ร้อยละ) การใช้บริการ P&P ในกลุ่มผู้สูงอายุ เฉพาะเขตรับผิดชอบ (คน)","date":"24 พฤษภาคม 2569"}],"providers":{"1":[{"code":"02572","name":"รพ.สต.ลำเพียก","target":141,"result":137,"rate":97.16,"status":"ผ่าน"},{"code":"02561","name":"รพ.สต.ดอนแสนสุข","target":190,"result":183,"rate":96.32,"status":"ผ่าน"},{"code":"02575","name":"รพ.สต.หนองบัว","target":200,"result":190,"rate":95,"status":"ผ่าน"},{"code":"02562","name":"รพ.สต.บ้านใหญ่","target":56,"result":52,"rate":92.86,"status":"ผ่าน"},{"code":"02563","name":"รพ.สต.เฉลียงใหญ่","target":227,"result":208,"rate":91.63,"status":"ผ่าน"},{"code":"02570","name":"รพ.สต.อังโกน","target":205,"result":175,"rate":85.37,"status":"ผ่าน"},{"code":"02567","name":"รพ.สต.ตลิ่งชัน","target":65,"result":55,"rate":84.62,"status":"ผ่าน"},{"code":"02576","name":"รพ.สต.สระว่านพระยา","target":219,"result":185,"rate":84.47,"status":"ผ่าน"},{"code":"02566","name":"รพ.สต.จระเข้หิน","target":233,"result":195,"rate":83.69,"status":"ผ่าน"},{"code":"02574","name":"รพ.สต.ซับก้านเหลือง","target":132,"result":103,"rate":78.03,"status":"ผ่าน"},{"code":"02564","name":"รพ.สต.โคกกระชาย","target":185,"result":133,"rate":71.89,"status":"ผ่าน"},{"code":"02569","name":"รพ.สต.นาราก","target":171,"result":119,"rate":69.59,"status":"ผ่าน"},{"code":"02568","name":"รพ.สต.มาบตะโกเอน","target":170,"result":117,"rate":68.82,"status":"ผ่าน"},{"code":"14699","name":"รพ.สต.หนองโบสถ์","target":82,"result":53,"rate":64.63,"status":"ผ่าน"},{"code":"02565","name":"รพ.สต.มาบกราด","target":92,"result":43,"rate":46.74,"status":"ตกเกณฑ์"},{"code":"10871","name":"รพ.ครบุรี","target":211,"result":68,"rate":32.23,"status":"ตกเกณฑ์"},{"code":"02573","name":"รพ.สต.ซับระวิง","target":66,"result":21,"rate":31.82,"status":"ตกเกณฑ์"}],"2":[{"code":"02562","name":"รพ.สต.บ้านใหญ่","target":9,"result":9,"rate":100,"status":"ผ่าน"},{"code":"02561","name":"รพ.สต.ดอนแสนสุข","target":32,"result":30,"rate":93.75,"status":"ผ่าน"},{"code":"02575","name":"รพ.สต.หนองบัว","target":33,"result":29,"rate":87.88,"status":"ผ่าน"},{"code":"02567","name":"รพ.สต.ตลิ่งชัน","target":13,"result":11,"rate":84.62,"status":"ผ่าน"},{"code":"14699","name":"รพ.สต.หนองโบสถ์","target":13,"result":11,"rate":84.62,"status":"ผ่าน"},{"code":"02574","name":"รพ.สต.ซับก้านเหลือง","target":20,"result":16,"rate":80,"status":"ผ่าน"},{"code":"02563","name":"รพ.สต.เฉลียงใหญ่","target":28,"result":22,"rate":78.57,"status":"ผ่าน"},{"code":"02570","name":"รพ.สต.อังโกน","target":37,"result":29,"rate":78.38,"status":"ผ่าน"},{"code":"02566","name":"รพ.สต.จระเข้หิน","target":46,"result":35,"rate":76.09,"status":"ผ่าน"},{"code":"02572","name":"รพ.สต.ลำเพียก","target":27,"result":19,"rate":70.37,"status":"ผ่าน"},{"code":"02568","name":"รพ.สต.มาบตะโกเอน","target":30,"result":19,"rate":63.33,"status":"ผ่าน"},{"code":"02565","name":"รพ.สต.มาบกราด","target":16,"result":10,"rate":62.5,"status":"ผ่าน"},{"code":"02573","name":"รพ.สต.ซับระวิง","target":8,"result":5,"rate":62.5,"status":"ผ่าน"},{"code":"02569","name":"รพ.สต.นาราก","target":28,"result":15,"rate":53.57,"status":"ผ่าน"},{"code":"02576","name":"รพ.สต.สระว่านพระยา","target":30,"result":16,"rate":53.33,"status":"ผ่าน"},{"code":"02564","name":"รพ.สต.โคกกระชาย","target":39,"result":20,"rate":51.28,"status":"ผ่าน"},{"code":"10871","name":"รพ.ครบุรี","target":40,"result":9,"rate":22.5,"status":"ตกเกณฑ์"}],"3":[{"code":"10871","name":"รพ.ครบุรี","target":510,"result":619,"rate":121.37,"status":"ผ่าน"},{"code":"02562","name":"รพ.สต.บ้านใหญ่","target":151,"result":180,"rate":119.21,"status":"ผ่าน"},{"code":"02563","name":"รพ.สต.เฉลียงใหญ่","target":351,"result":233,"rate":66.38,"status":"ผ่าน"},{"code":"02561","name":"รพ.สต.ดอนแสนสุข","target":359,"result":202,"rate":56.27,"status":"ผ่าน"},{"code":"02566","name":"รพ.สต.จระเข้หิน","target":375,"result":166,"rate":44.27,"status":"ผ่าน"},{"code":"02572","name":"รพ.สต.ลำเพียก","target":282,"result":121,"rate":42.91,"status":"ผ่าน"},{"code":"02569","name":"รพ.สต.นาราก","target":297,"result":125,"rate":42.09,"status":"ผ่าน"},{"code":"02564","name":"รพ.สต.โคกกระชาย","target":319,"result":129,"rate":40.44,"status":"ผ่าน"},{"code":"02576","name":"รพ.สต.สระว่านพระยา","target":351,"result":132,"rate":37.61,"status":"ตกเกณฑ์"},{"code":"02573","name":"รพ.สต.ซับระวิง","target":116,"result":38,"rate":32.76,"status":"ตกเกณฑ์"},{"code":"02567","name":"รพ.สต.ตลิ่งชัน","target":102,"result":33,"rate":32.35,"status":"ตกเกณฑ์"},{"code":"02568","name":"รพ.สต.มาบตะโกเอน","target":272,"result":75,"rate":27.57,"status":"ตกเกณฑ์"},{"code":"14699","name":"รพ.สต.หนองโบสถ์","target":146,"result":38,"rate":26.03,"status":"ตกเกณฑ์"},{"code":"02574","name":"รพ.สต.ซับก้านเหลือง","target":359,"result":64,"rate":17.83,"status":"ตกเกณฑ์"},{"code":"02565","name":"รพ.สต.มาบกราด","target":186,"result":32,"rate":17.2,"status":"ตกเกณฑ์"},{"code":"02570","name":"รพ.สต.อังโกน","target":313,"result":42,"rate":13.42,"status":"ตกเกณฑ์"},{"code":"02575","name":"รพ.สต.หนองบัว","target":348,"result":36,"rate":10.34,"status":"ตกเกณฑ์"}],"4":[{"code":"02563","name":"รพ.สต.เฉลียงใหญ่","target":351,"result":783,"rate":223.08,"status":"ผ่าน"},{"code":"02562","name":"รพ.สต.บ้านใหญ่","target":151,"result":329,"rate":217.88,"status":"ผ่าน"},{"code":"10871","name":"รพ.ครบุรี","target":510,"result":970,"rate":190.2,"status":"ผ่าน"},{"code":"02576","name":"รพ.สต.สระว่านพระยา","target":351,"result":562,"rate":160.11,"status":"ผ่าน"},{"code":"02561","name":"รพ.สต.ดอนแสนสุข","target":359,"result":507,"rate":141.23,"status":"ผ่าน"},{"code":"02572","name":"รพ.สต.ลำเพียก","target":282,"result":391,"rate":138.65,"status":"ผ่าน"},{"code":"02566","name":"รพ.สต.จระเข้หิน","target":375,"result":516,"rate":137.6,"status":"ผ่าน"},{"code":"02567","name":"รพ.สต.ตลิ่งชัน","target":102,"result":102,"rate":100,"status":"ผ่าน"},{"code":"02568","name":"รพ.สต.มาบตะโกเอน","target":272,"result":253,"rate":93.01,"status":"ผ่าน"},{"code":"14699","name":"รพ.สต.หนองโบสถ์","target":146,"result":129,"rate":88.36,"status":"ผ่าน"},{"code":"02564","name":"รพ.สต.โคกกระชาย","target":319,"result":238,"rate":74.61,"status":"ผ่าน"},{"code":"02570","name":"รพ.สต.อังโกน","target":313,"result":211,"rate":67.41,"status":"ผ่าน"},{"code":"02569","name":"รพ.สต.นาราก","target":297,"result":188,"rate":63.3,"status":"ผ่าน"},{"code":"02573","name":"รพ.สต.ซับระวิง","target":116,"result":66,"rate":56.9,"status":"ตกเกณฑ์"},{"code":"02565","name":"รพ.สต.มาบกราด","target":186,"result":57,"rate":30.65,"status":"ตกเกณฑ์"},{"code":"02574","name":"รพ.สต.ซับก้านเหลือง","target":359,"result":79,"rate":22.01,"status":"ตกเกณฑ์"},{"code":"02575","name":"รพ.สต.หนองบัว","target":348,"result":63,"rate":18.1,"status":"ตกเกณฑ์"}],"5":[{"code":"02563","name":"รพ.สต.เฉลียงใหญ่","target":3141,"result":1841,"rate":58.61,"status":"ผ่าน"},{"code":"10871","name":"รพ.ครบุรี","target":4161,"result":2431,"rate":58.42,"status":"ผ่าน"},{"code":"02573","name":"รพ.สต.ซับระวิง","target":852,"result":346,"rate":40.61,"status":"ผ่าน"},{"code":"02566","name":"รพ.สต.จระเข้หิน","target":2925,"result":399,"rate":13.64,"status":"ตกเกณฑ์"},{"code":"02567","name":"รพ.สต.ตลิ่งชัน","target":433,"result":49,"rate":11.32,"status":"ตกเกณฑ์"},{"code":"02576","name":"รพ.สต.สระว่านพระยา","target":2356,"result":218,"rate":9.25,"status":"ตกเกณฑ์"},{"code":"02574","name":"รพ.สต.ซับก้านเหลือง","target":2943,"result":248,"rate":8.43,"status":"ตกเกณฑ์"},{"code":"02561","name":"รพ.สต.ดอนแสนสุข","target":2498,"result":204,"rate":8.17,"status":"ตกเกณฑ์"},{"code":"02564","name":"รพ.สต.โคกกระชาย","target":2342,"result":165,"rate":7.05,"status":"ตกเกณฑ์"},{"code":"02572","name":"รพ.สต.ลำเพียก","target":1849,"result":123,"rate":6.65,"status":"ตกเกณฑ์"},{"code":"02565","name":"รพ.สต.มาบกราด","target":1005,"result":62,"rate":6.17,"status":"ตกเกณฑ์"},{"code":"14699","name":"รพ.สต.หนองโบสถ์","target":845,"result":52,"rate":6.15,"status":"ตกเกณฑ์"},{"code":"02568","name":"รพ.สต.มาบตะโกเอน","target":2257,"result":126,"rate":5.58,"status":"ตกเกณฑ์"},{"code":"02575","name":"รพ.สต.หนองบัว","target":2118,"result":114,"rate":5.38,"status":"ตกเกณฑ์"},{"code":"02569","name":"รพ.สต.นาราก","target":2578,"result":129,"rate":5,"status":"ตกเกณฑ์"},{"code":"02562","name":"รพ.สต.บ้านใหญ่","target":1428,"result":69,"rate":4.83,"status":"ตกเกณฑ์"},{"code":"02570","name":"รพ.สต.อังโกน","target":2254,"result":99,"rate":4.39,"status":"ตกเกณฑ์"}],"6":[{"code":"02570","name":"รพ.สต.อังโกน","target":154,"result":147,"rate":95.45,"status":"ผ่าน"},{"code":"14699","name":"รพ.สต.หนองโบสถ์","target":43,"result":41,"rate":95.35,"status":"ผ่าน"},{"code":"02576","name":"รพ.สต.สระว่านพระยา","target":1089,"result":954,"rate":87.6,"status":"ผ่าน"},{"code":"02561","name":"รพ.สต.ดอนแสนสุข","target":391,"result":301,"rate":76.98,"status":"ผ่าน"},{"code":"10871","name":"รพ.ครบุรี","target":2932,"result":1968,"rate":67.12,"status":"ผ่าน"},{"code":"02563","name":"รพ.สต.เฉลียงใหญ่","target":1919,"result":1213,"rate":63.21,"status":"ผ่าน"},{"code":"02574","name":"รพ.สต.ซับก้านเหลือง","target":224,"result":133,"rate":59.38,"status":"ผ่าน"},{"code":"02564","name":"รพ.สต.โคกกระชาย","target":222,"result":103,"rate":46.4,"status":"ผ่าน"},{"code":"02567","name":"รพ.สต.ตลิ่งชัน","target":60,"result":27,"rate":45,"status":"ผ่าน"},{"code":"02566","name":"รพ.สต.จระเข้หิน","target":632,"result":282,"rate":44.62,"status":"ผ่าน"},{"code":"02565","name":"รพ.สต.มาบกราด","target":115,"result":32,"rate":27.83,"status":"ตกเกณฑ์"},{"code":"02575","name":"รพ.สต.หนองบัว","target":214,"result":56,"rate":26.17,"status":"ตกเกณฑ์"},{"code":"02569","name":"รพ.สต.นาราก","target":311,"result":76,"rate":24.44,"status":"ตกเกณฑ์"},{"code":"02568","name":"รพ.สต.มาบตะโกเอน","target":243,"result":46,"rate":18.93,"status":"ตกเกณฑ์"},{"code":"02572","name":"รพ.สต.ลำเพียก","target":303,"result":53,"rate":17.49,"status":"ตกเกณฑ์"},{"code":"02562","name":"รพ.สต.บ้านใหญ่","target":137,"result":19,"rate":13.87,"status":"ตกเกณฑ์"},{"code":"02573","name":"รพ.สต.ซับระวิง","target":558,"result":34,"rate":6.09,"status":"ตกเกณฑ์"}],"7":[{"code":"02576","name":"รพ.สต.สระว่านพระยา","target":1003,"result":953,"rate":95.01,"status":"ผ่าน"},{"code":"02573","name":"รพ.สต.ซับระวิง","target":268,"result":232,"rate":86.57,"status":"ผ่าน"},{"code":"02563","name":"รพ.สต.เฉลียงใหญ่","target":1768,"result":1346,"rate":76.13,"status":"ผ่าน"},{"code":"02572","name":"รพ.สต.ลำเพียก","target":856,"result":244,"rate":28.5,"status":"ตกเกณฑ์"},{"code":"02569","name":"รพ.สต.นาราก","target":1175,"result":271,"rate":23.06,"status":"ตกเกณฑ์"},{"code":"02566","name":"รพ.สต.จระเข้หิน","target":1719,"result":396,"rate":23.04,"status":"ตกเกณฑ์"},{"code":"02568","name":"รพ.สต.มาบตะโกเอน","target":821,"result":173,"rate":21.07,"status":"ตกเกณฑ์"},{"code":"02561","name":"รพ.สต.ดอนแสนสุข","target":1251,"result":261,"rate":20.86,"status":"ตกเกณฑ์"},{"code":"02570","name":"รพ.สต.อังโกน","target":1210,"result":247,"rate":20.41,"status":"ตกเกณฑ์"},{"code":"02575","name":"รพ.สต.หนองบัว","target":807,"result":161,"rate":19.95,"status":"ตกเกณฑ์"},{"code":"10871","name":"รพ.ครบุรี","target":2212,"result":430,"rate":19.44,"status":"ตกเกณฑ์"},{"code":"02562","name":"รพ.สต.บ้านใหญ่","target":688,"result":114,"rate":16.57,"status":"ตกเกณฑ์"},{"code":"02564","name":"รพ.สต.โคกกระชาย","target":1102,"result":169,"rate":15.34,"status":"ตกเกณฑ์"},{"code":"02565","name":"รพ.สต.มาบกราด","target":532,"result":77,"rate":14.47,"status":"ตกเกณฑ์"},{"code":"02567","name":"รพ.สต.ตลิ่งชัน","target":265,"result":32,"rate":12.08,"status":"ตกเกณฑ์"},{"code":"02574","name":"รพ.สต.ซับก้านเหลือง","target":1486,"result":166,"rate":11.17,"status":"ตกเกณฑ์"},{"code":"14699","name":"รพ.สต.หนองโบสถ์","target":320,"result":22,"rate":6.88,"status":"ตกเกณฑ์"}]}};
+
+    const state = {
+      view: "overview",
+      kpiNo: 1,
+      sort: "rate",
+      sortDir: "desc",
+      search: "",
+      failOnly: false,
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => [...document.querySelectorAll(sel)];
+    const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+    const pct = (n) => Number(n || 0).toFixed(2) + "%";
+    const passClass = (status) => status === "ผ่าน" ? "pass" : "fail";
+    const statusText = (status) => status === "ผ่าน" ? "ผ่าน" : "ตกเกณฑ์";
+
+    function shortName(name) {
+      return String(name)
+        .replace("ร้อยละ", "")
+        .replace("อัตรา", "")
+        .replace("ได้รับการ", "")
+        .replace("สุขภาพช่องปาก", "ช่องปาก")
+        .trim();
+    }
+
+    function kpiTitle(kpi) {
+      const titles = {
+        1: "เด็ก 0-5 ปี ตรวจคัดกรองและเคลือบ/ทาฟลูออไรด์",
+        2: "เด็ก 3 ปี ตรวจคัดกรองช่องปาก",
+        3: "เด็ก 6-12 ปี เคลือบหลุมร่องฟันกรามถาวร",
+        4: "เด็ก 6-12 ปี ได้รับบริการทันตกรรม",
+        5: "วัยทำงาน 15-59 ปี เข้าถึงบริการทันตกรรม",
+        6: "อายุ 40 ปีขึ้นไป ตรวจช่องปากและคัดกรองรอยโรค",
+        7: "ผู้สูงอายุได้รับการส่งเสริมป้องกันช่องปาก",
+      };
+      return titles[kpi.no] || shortName(kpi.name);
+    }
+
+    function getKpi() {
+      return DATA.summary.find((k) => k.no === Number(state.kpiNo));
+    }
+
+    function getProviders() {
+      const term = state.search.trim().toLowerCase();
+      let rows = [...(DATA.providers[String(state.kpiNo)] || [])];
+      if (term) rows = rows.filter((r) => (r.name + " " + r.code).toLowerCase().includes(term));
+      if (state.failOnly) rows = rows.filter((r) => r.status !== "ผ่าน");
+      const dir = state.sortDir === "asc" ? 1 : -1;
+      rows.sort((a, b) => {
+        if (state.sort === "name") return a.name.localeCompare(b.name, "th") * dir;
+        return ((a[state.sort] || 0) - (b[state.sort] || 0)) * dir;
+      });
+      return rows;
+    }
+
+    function renderCards() {
+      $("#kpiCards").innerHTML = DATA.summary.map((k) => `
+        <button class="kpi-card ${k.no === state.kpiNo ? "active" : ""}" data-kpi="${k.no}">
+          <div class="kpi-no">KPI ${k.no}</div>
+          <div class="kpi-rate" style="color: ${k.status === "ผ่าน" ? "var(--green)" : "var(--orange)"}">${pct(k.rate)}</div>
+          <div class="kpi-name">${escapeHtml(kpiTitle(k))}</div>
+          <span class="badge ${passClass(k.status)}">${statusText(k.status)}</span>
+        </button>
+      `).join("");
+      $$(".kpi-card").forEach((btn) => btn.addEventListener("click", () => {
+        state.kpiNo = Number(btn.dataset.kpi);
+        state.view = "kpi";
+        syncControls();
+        render();
+      }));
+    }
+
+    function renderOverview() {
+      renderCards();
+      const maxRate = Math.max(120, ...DATA.summary.map((k) => k.rate)) * 1.05;
+      $("#overviewChart").innerHTML = DATA.summary.map((k) => `
+        <div class="bar-row">
+          <strong>ข้อ ${k.no}</strong>
+          <div class="bar-track" title="เกณฑ์ ${k.criterion}%">
+            <div class="criterion-line" style="left:${Math.min(100, k.criterion / maxRate * 100)}%"></div>
+            <div class="bar-fill ${passClass(k.status)}" style="width:${Math.min(100, k.rate / maxRate * 100)}%"></div>
+          </div>
+          <span class="num">${pct(k.rate)}</span>
+        </div>
+      `).join("");
+
+      $("#overviewTable").innerHTML = DATA.summary.map((k) => `
+        <tr>
+          <td>${k.no}</td>
+          <td>${escapeHtml(shortName(k.name))}</td>
+          <td class="num">${pct(k.criterion)}</td>
+          <td class="num">${fmt(k.target)}</td>
+          <td class="num">${fmt(k.result)}</td>
+          <td class="num">${pct(k.rate)}</td>
+          <td><span class="badge ${passClass(k.status)}">${statusText(k.status)}</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function renderKpi() {
+      const kpi = getKpi();
+      const rows = getProviders();
+      $("#selectedTitle").textContent = "KPI " + kpi.no + ": " + kpiTitle(kpi);
+      $("#selectedSubtitle").textContent = "ภาพรวม " + pct(kpi.rate) + " เทียบเกณฑ์ " + pct(kpi.criterion) + " | เป้าหมาย " + fmt(kpi.target) + " | ผลงาน " + fmt(kpi.result);
+      $("#selectedBadge").className = "badge " + passClass(kpi.status);
+      $("#selectedBadge").textContent = statusText(kpi.status);
+      $("#activeRate").textContent = pct(kpi.rate);
+
+      $("#kpiFacts").innerHTML = [
+        ["เป้าหมาย", fmt(kpi.target), "var(--teal)"],
+        ["ผลงาน", fmt(kpi.result), "var(--blue)"],
+        ["ผลงาน (%)", pct(kpi.rate), kpi.status === "ผ่าน" ? "var(--green)" : "var(--orange)"],
+        ["เกณฑ์", pct(kpi.criterion), "var(--ink)"],
+      ].map(([label, value, color]) => `
+        <div class="fact"><strong style="color:${color}">${value}</strong><span class="muted small">${label}</span></div>
+      `).join("");
+
+      $("#providerTable").innerHTML = rows.map((r) => `
+        <tr>
+          <td>${escapeHtml(r.name)}</td>
+          <td>${escapeHtml(r.code)}</td>
+          <td class="num">${fmt(r.target)}</td>
+          <td class="num">${fmt(r.result)}</td>
+          <td class="num">${pct(r.rate)}</td>
+          <td><span class="badge ${passClass(r.status)}">${statusText(r.status)}</span></td>
+        </tr>
+      `).join("") || '<tr><td colspan="6" class="muted">ไม่พบข้อมูลตามเงื่อนไข</td></tr>';
+
+      const chartRows = rows.length ? rows : getProvidersFallback();
+      const maxRate = Math.max(100, kpi.criterion, ...chartRows.map((r) => r.rate)) * 1.08;
+      $("#providerChart").innerHTML = chartRows.map((r) => `
+        <div class="provider-row">
+          <div class="provider-name" title="${escapeHtml(r.name)}">${escapeHtml(r.name.replace("รพ.สต.", ""))}</div>
+          <div class="bar-track">
+            <div class="criterion-line" style="left:${Math.min(100, kpi.criterion / maxRate * 100)}%"></div>
+            <div class="bar-fill ${passClass(r.status)}" style="width:${Math.min(100, r.rate / maxRate * 100)}%"></div>
+          </div>
+          <span class="num">${pct(r.rate)}</span>
+        </div>
+      `).join("");
+
+      $("#sourceBox").innerHTML = "<strong>แหล่งข้อมูล:</strong> " + escapeHtml(kpi.source) + "<br><strong>Report code:</strong><br>" + escapeHtml(kpi.report_codes).replace(/\n/g, "<br>");
+    }
+
+    function getProvidersFallback() {
+      return DATA.providers[String(state.kpiNo)] || [];
+    }
+
+    function renderProviderMatrix() {
+      const kpi = getKpi();
+      const rows = getProviders();
+      const maxRate = Math.max(100, kpi.criterion, ...rows.map((r) => r.rate)) * 1.08;
+      $("#providerMatrix").innerHTML = `
+        <div class="selected-kpi">
+          <div>
+            <h2>KPI ${kpi.no}: ${escapeHtml(kpiTitle(kpi))}</h2>
+            <p class="muted small">กรองอยู่ ${rows.length} จาก ${DATA.provider_count} หน่วยบริการ | เส้นสีเข้มคือเกณฑ์ ${pct(kpi.criterion)}</p>
+          </div>
+          <span class="badge ${passClass(kpi.status)}">${statusText(kpi.status)}</span>
+        </div>
+        <div class="provider-chart">
+          ${rows.map((r) => `
+            <div class="provider-row">
+              <div class="provider-name">${escapeHtml(r.name)}</div>
+              <div class="bar-track">
+                <div class="criterion-line" style="left:${Math.min(100, kpi.criterion / maxRate * 100)}%"></div>
+                <div class="bar-fill ${passClass(r.status)}" style="width:${Math.min(100, r.rate / maxRate * 100)}%"></div>
+              </div>
+              <span class="num">${pct(r.rate)}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderGaps() {
+      const riskyKpis = DATA.summary.filter((k) => k.status !== "ผ่าน");
+      $("#kpiRiskList").innerHTML = riskyKpis.map((k) => `
+        <button class="risk-item" data-kpi="${k.no}">
+          <strong>KPI ${k.no}</strong>
+          <span>${escapeHtml(kpiTitle(k))}</span>
+          <span class="num" style="color:var(--orange);font-weight:800">${pct(k.rate)}</span>
+        </button>
+      `).join("");
+      $$("#kpiRiskList .risk-item").forEach((btn) => btn.addEventListener("click", () => {
+        state.kpiNo = Number(btn.dataset.kpi);
+        state.failOnly = true;
+        state.view = "kpi";
+        syncControls();
+        render();
+      }));
+
+      const kpi = getKpi();
+      const failRows = (DATA.providers[String(state.kpiNo)] || []).filter((r) => r.status !== "ผ่าน").sort((a, b) => a.rate - b.rate);
+      $("#gapHint").textContent = "KPI " + kpi.no + " มีหน่วยบริการต่ำกว่าเกณฑ์ " + failRows.length + " แห่ง";
+      $("#providerRiskList").innerHTML = failRows.slice(0, 8).map((r) => `
+        <button class="risk-item" data-name="${escapeHtml(r.name)}">
+          <strong>${escapeHtml(r.code)}</strong>
+          <span>${escapeHtml(r.name)}</span>
+          <span class="num" style="color:var(--orange);font-weight:800">${pct(r.rate)}</span>
+        </button>
+      `).join("") || '<p class="muted small">ไม่มีหน่วยบริการต่ำกว่าเกณฑ์ใน KPI ที่เลือก</p>';
+    }
+
+    function setView(view) {
+      state.view = view;
+      render();
+    }
+
+    function syncControls() {
+      $("#kpiSelect").value = String(state.kpiNo);
+      $("#searchInput").value = state.search;
+      $("#failOnly").checked = state.failOnly;
+      $$(".segmented button").forEach((b) => b.classList.toggle("active", b.dataset.sort === state.sort));
+      $$(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.view === state.view));
+    }
+
+    function render() {
+      const titles = {
+        overview: ["ภาพรวม KPI ทันตกรรม อำเภอครบุรี", "ข้อมูลจาก HDC กระทรวงสาธารณสุข จังหวัดนครราชสีมา"],
+        kpi: ["เจาะราย KPI และรายหน่วยบริการ", "เลือก KPI เพื่อดูตารางและกราฟหน่วยบริการ"],
+        providers: ["เปรียบเทียบรายหน่วยบริการ", "ใช้สำหรับดูอันดับผลงานและจุดต่ำกว่าเกณฑ์"],
+        gaps: ["จุดเร่งติดตาม", "KPI และหน่วยบริการที่ต่ำกว่าเกณฑ์"],
+      };
+      $("#pageTitle").textContent = titles[state.view][0];
+      $("#pageSubtitle").textContent = titles[state.view][1];
+      ["overview", "kpi", "providers", "gaps"].forEach((view) => {
+        $("#" + view + "View").classList.toggle("hidden", state.view !== view);
+      });
+      syncControls();
+      renderOverview();
+      renderKpi();
+      renderProviderMatrix();
+      renderGaps();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function init() {
+      $("#kpiSelect").innerHTML = DATA.summary.map((k) => `<option value="${k.no}">KPI ${k.no}: ${escapeHtml(kpiTitle(k))}</option>`).join("");
+      $$(".nav button").forEach((btn) => btn.addEventListener("click", () => setView(btn.dataset.view)));
+      $("#kpiSelect").addEventListener("change", (e) => { state.kpiNo = Number(e.target.value); render(); });
+      $("#searchInput").addEventListener("input", (e) => { state.search = e.target.value; renderKpi(); renderProviderMatrix(); });
+      $("#failOnly").addEventListener("change", (e) => { state.failOnly = e.target.checked; renderKpi(); renderProviderMatrix(); });
+      $$(".segmented button").forEach((btn) => btn.addEventListener("click", () => {
+        state.sort = btn.dataset.sort;
+        syncControls();
+        renderKpi();
+        renderProviderMatrix();
+      }));
+      $$("[data-table-sort]").forEach((btn) => btn.addEventListener("click", () => {
+        const next = btn.dataset.tableSort;
+        if (state.sort === next) state.sortDir = state.sortDir === "desc" ? "asc" : "desc";
+        state.sort = next;
+        syncControls();
+        renderKpi();
+        renderProviderMatrix();
+      }));
+      $("#printBtn").addEventListener("click", () => window.print());
+      $("#resetBtn").addEventListener("click", () => {
+        state.view = "overview";
+        state.kpiNo = 1;
+        state.sort = "rate";
+        state.sortDir = "desc";
+        state.search = "";
+        state.failOnly = false;
+        render();
+      });
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
