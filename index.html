@@ -607,7 +607,15 @@
             <div class="table-wrap" style="margin-top: 12px;">
               <table>
                 <thead>
-                  <tr><th>ข้อ</th><th>KPI</th><th class="num">เกณฑ์</th><th class="num">เป้าหมาย</th><th class="num">ผลงาน</th><th class="num">%</th><th>สถานะ</th></tr>
+                  <tr>
+                    <th><button data-overview-sort="no">ข้อ</button></th>
+                    <th><button data-overview-sort="name">KPI</button></th>
+                    <th class="num"><button data-overview-sort="criterion">เกณฑ์</button></th>
+                    <th class="num"><button data-overview-sort="target">เป้าหมาย</button></th>
+                    <th class="num"><button data-overview-sort="result">ผลงาน</button></th>
+                    <th class="num"><button data-overview-sort="rate">%</button></th>
+                    <th><button data-overview-sort="status">สถานะ</button></th>
+                  </tr>
                 </thead>
                 <tbody id="overviewTable"></tbody>
               </table>
@@ -642,11 +650,11 @@
                 <thead>
                   <tr>
                     <th><button data-table-sort="name">หน่วยบริการ</button></th>
-                    <th>รหัส</th>
+                    <th><button data-table-sort="code">รหัส</button></th>
                     <th class="num"><button data-table-sort="target">เป้าหมาย</button></th>
                     <th class="num"><button data-table-sort="result">ผลงาน</button></th>
                     <th class="num"><button data-table-sort="rate">%</button></th>
-                    <th>สถานะ</th>
+                    <th><button data-table-sort="status">สถานะ</button></th>
                   </tr>
                 </thead>
                 <tbody id="providerTable"></tbody>
@@ -709,6 +717,12 @@
       kpiNo: 1,
       sort: "rate",
       sortDir: "desc",
+      overviewSort: "no",
+      overviewSortDir: "asc",
+      unitSort: "kpiNo",
+      unitSortDir: "asc",
+      districtSort: "rank",
+      districtSortDir: "asc",
       search: "",
       failOnly: false,
       providerCode: "",
@@ -753,11 +767,7 @@
       let rows = [...(DATA.providers[String(state.kpiNo)] || [])];
       if (term) rows = rows.filter((r) => (r.name + " " + r.code).toLowerCase().includes(term));
       if (state.failOnly) rows = rows.filter((r) => r.status !== "ผ่าน");
-      const dir = state.sortDir === "asc" ? 1 : -1;
-      rows.sort((a, b) => {
-        if (state.sort === "name") return a.name.localeCompare(b.name, "th") * dir;
-        return ((a[state.sort] || 0) - (b[state.sort] || 0)) * dir;
-      });
+      rows.sort((a, b) => compareRows(a, b, state.sort, state.sortDir));
       return rows;
     }
 
@@ -777,6 +787,31 @@
     function districtLabel(row) {
       const current = row.dentistCurrent ?? DATA.dentistManpower?.[row.districtCode]?.current;
       return row.districtName + (current == null ? "" : " (" + current + " ทพ.)");
+    }
+
+    function sortValue(row, key) {
+      if (key === "districtLabel") return districtLabel(row);
+      if (key === "kpiTitle") return row.kpiTitle;
+      return row[key];
+    }
+
+    function compareRows(a, b, key, dir) {
+      const mult = dir === "asc" ? 1 : -1;
+      const av = sortValue(a, key);
+      const bv = sortValue(b, key);
+      if (typeof av === "number" || typeof bv === "number") {
+        return ((Number(av) || 0) - (Number(bv) || 0)) * mult;
+      }
+      return String(av ?? "").localeCompare(String(bv ?? ""), "th", { numeric: true }) * mult;
+    }
+
+    function toggleSort(sortKey, dirKey, nextKey, defaultDir = "asc") {
+      if (state[sortKey] === nextKey) {
+        state[dirKey] = state[dirKey] === "asc" ? "desc" : "asc";
+      } else {
+        state[sortKey] = nextKey;
+        state[dirKey] = defaultDir;
+      }
     }
 
     function renderCards() {
@@ -810,7 +845,8 @@
         </div>
       `).join("");
 
-      $("#overviewTable").innerHTML = DATA.summary.map((k) => `
+      const overviewRows = [...DATA.summary].sort((a, b) => compareRows(a, b, state.overviewSort, state.overviewSortDir));
+      $("#overviewTable").innerHTML = overviewRows.map((k) => `
         <tr>
           <td>${k.no}</td>
           <td>${escapeHtml(shortName(k.name))}</td>
@@ -885,6 +921,7 @@
           gap: Number(row.rate ?? 0) - Number(kpi.criterion ?? 0),
         };
       });
+      rows.sort((a, b) => compareRows(a, b, state.unitSort, state.unitSortDir));
       const passCount = rows.filter((row) => row.status === "ผ่าน").length;
       const failCount = rows.length - passCount;
       const totalTarget = rows.reduce((sum, row) => sum + (row.target || 0), 0);
@@ -929,14 +966,14 @@
               <table>
                 <thead>
                   <tr>
-                    <th>ข้อ</th>
-                    <th>KPI</th>
-                    <th class="num">เกณฑ์</th>
-                    <th class="num">เป้าหมาย</th>
-                    <th class="num">ผลงาน</th>
-                    <th class="num">%</th>
-                    <th class="num">ส่วนต่าง</th>
-                    <th>สถานะ</th>
+                    <th><button data-unit-sort="kpiNo">ข้อ</button></th>
+                    <th><button data-unit-sort="kpiTitle">KPI</button></th>
+                    <th class="num"><button data-unit-sort="criterion">เกณฑ์</button></th>
+                    <th class="num"><button data-unit-sort="target">เป้าหมาย</button></th>
+                    <th class="num"><button data-unit-sort="result">ผลงาน</button></th>
+                    <th class="num"><button data-unit-sort="rate">%</button></th>
+                    <th class="num"><button data-unit-sort="gap">ส่วนต่าง</button></th>
+                    <th><button data-unit-sort="status">สถานะ</button></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -966,7 +1003,8 @@
     function renderDistrictComparison() {
       const kpiNo = Number(state.districtKpiNo || state.kpiNo || 1);
       const kpi = DATA.summary.find((item) => item.no === kpiNo);
-      const rows = [...(DATA.districtComparison?.[String(kpiNo)] || [])].sort((a, b) => a.rank - b.rank);
+      const rows = [...(DATA.districtComparison?.[String(kpiNo)] || [])]
+        .sort((a, b) => compareRows(a, b, state.districtSort, state.districtSortDir));
       const khonburi = rows.find((row) => row.districtCode === "3002");
       const passCount = rows.filter((row) => row.status === "ผ่าน").length;
       const avgRate = rows.length ? rows.reduce((sum, row) => sum + (row.rate || 0), 0) / rows.length : 0;
@@ -1011,12 +1049,12 @@
               <table>
                 <thead>
                   <tr>
-                    <th>อันดับ</th>
-                    <th>อำเภอ (จำนวน ทพ.)</th>
-                    <th class="num">เป้าหมาย</th>
-                    <th class="num">ผลงาน</th>
-                    <th class="num">%</th>
-                    <th>สถานะ</th>
+                    <th><button data-district-sort="rank">อันดับ</button></th>
+                    <th><button data-district-sort="districtLabel">อำเภอ (จำนวน ทพ.)</button></th>
+                    <th class="num"><button data-district-sort="target">เป้าหมาย</button></th>
+                    <th class="num"><button data-district-sort="result">ผลงาน</button></th>
+                    <th class="num"><button data-district-sort="rate">%</button></th>
+                    <th><button data-district-sort="status">สถานะ</button></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1135,18 +1173,59 @@
       }));
       $$("[data-table-sort]").forEach((btn) => btn.addEventListener("click", () => {
         const next = btn.dataset.tableSort;
-        if (state.sort === next) state.sortDir = state.sortDir === "desc" ? "asc" : "desc";
-        state.sort = next;
+        const defaultDir = ["name", "code", "status"].includes(next) ? "asc" : "desc";
+        toggleSort("sort", "sortDir", next, defaultDir);
         syncControls();
         renderKpi();
         renderProviderMatrix();
       }));
+      $$("[data-overview-sort]").forEach((btn) => btn.addEventListener("click", () => {
+        const next = btn.dataset.overviewSort;
+        const defaultDir = ["no", "name", "status"].includes(next) ? "asc" : "desc";
+        toggleSort("overviewSort", "overviewSortDir", next, defaultDir);
+        renderOverview();
+      }));
+      $$("[data-unit-sort]").forEach((btn) => btn.addEventListener("click", () => {
+        const next = btn.dataset.unitSort;
+        const defaultDir = ["kpiNo", "kpiTitle", "status"].includes(next) ? "asc" : "desc";
+        toggleSort("unitSort", "unitSortDir", next, defaultDir);
+        renderProviderMatrix();
+      }));
+      $$("[data-district-sort]").forEach((btn) => btn.addEventListener("click", () => {
+        const next = btn.dataset.districtSort;
+        const defaultDir = ["rank", "districtLabel", "status"].includes(next) ? "asc" : "desc";
+        toggleSort("districtSort", "districtSortDir", next, defaultDir);
+        renderDistrictComparison();
+      }));
+      document.addEventListener("click", (event) => {
+        const unitBtn = event.target.closest("[data-unit-sort]");
+        if (unitBtn) {
+          const next = unitBtn.dataset.unitSort;
+          const defaultDir = ["kpiNo", "kpiTitle", "status"].includes(next) ? "asc" : "desc";
+          toggleSort("unitSort", "unitSortDir", next, defaultDir);
+          renderProviderMatrix();
+          return;
+        }
+        const districtBtn = event.target.closest("[data-district-sort]");
+        if (districtBtn) {
+          const next = districtBtn.dataset.districtSort;
+          const defaultDir = ["rank", "districtLabel", "status"].includes(next) ? "asc" : "desc";
+          toggleSort("districtSort", "districtSortDir", next, defaultDir);
+          renderDistrictComparison();
+        }
+      });
       $("#printBtn").addEventListener("click", () => window.print());
       $("#resetBtn").addEventListener("click", () => {
         state.view = "overview";
         state.kpiNo = 1;
         state.sort = "rate";
         state.sortDir = "desc";
+        state.overviewSort = "no";
+        state.overviewSortDir = "asc";
+        state.unitSort = "kpiNo";
+        state.unitSortDir = "asc";
+        state.districtSort = "rank";
+        state.districtSortDir = "asc";
         state.search = "";
         state.failOnly = false;
         state.providerCode = allProviders()[0]?.code || "";
