@@ -500,6 +500,16 @@
       display: none !important;
     }
 
+    .spatial-frame {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 118px);
+      min-height: 760px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
     @media (max-width: 1120px) {
       .app {
         grid-template-columns: 1fr;
@@ -573,6 +583,7 @@
         <button data-view="providers">หน่วยบริการ</button>
         <button data-view="districts">เปรียบเทียบอำเภอ</button>
         <button data-view="gaps">จุดเร่งติดตาม</button>
+        <button data-view="spatial">แผนที่วิกฤต</button>
       </nav>
     </aside>
 
@@ -705,6 +716,15 @@
             <div class="risk-list" id="providerRiskList"></div>
           </div>
         </div>
+      </section>
+
+      <section id="spatialView" class="hidden">
+        <iframe
+          class="spatial-frame"
+          src="KBH_dental_KPI_HDC_2569_spatial_heatmap.html?embedded=1"
+          title="Heat Map พื้นที่วิกฤต อำเภอครบุรี"
+          loading="lazy"
+        ></iframe>
       </section>
     </main>
   </div>
@@ -1130,12 +1150,14 @@
         providers: ["ผลงานรายหน่วยบริการ", "เลือก 1 หน่วยบริการเพื่อดู KPI ครบทุกข้อ"],
         districts: ["เปรียบเทียบอำเภอในจังหวัด", "ดูอันดับครบุรีเทียบกับอำเภออื่นในนครราชสีมา"],
         gaps: ["จุดเร่งติดตาม", "KPI และหน่วยบริการที่ต่ำกว่าเกณฑ์"],
+        spatial: ["แผนที่วิกฤตเชิงพื้นที่", "Heat Map แยกตามพื้นที่รับผิดชอบรายหน่วยบริการ"],
       };
       $("#pageTitle").textContent = titles[state.view][0];
       $("#pageSubtitle").textContent = titles[state.view][1];
-      ["overview", "kpi", "providers", "districts", "gaps"].forEach((view) => {
+      ["overview", "kpi", "providers", "districts", "gaps", "spatial"].forEach((view) => {
         $("#" + view + "View").classList.toggle("hidden", state.view !== view);
       });
+      document.querySelector(".summary-grid").classList.toggle("hidden", state.view === "spatial");
       syncControls();
       renderOverview();
       renderKpi();
